@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>My Algolia Search App</title>
+    </head>
+    <style>
+body {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    color: #111827;
+}
+
+.container {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.search-container {
+    padding-top: 40px;
+}
+
+.search-container .label-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-container .label-container label {
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.search-container .label-container p {
+    font-size: 0.7em;
+    color: #6B7280;
+}
+
+.search-container input {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    height: 44px;
+    width: 100%;
+    padding-left: 12px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.hits-container {
+    padding-top: 8px;
+}
+
+.hits-container .hits .hits-placeholder {
+    font-size: 0.8em;
+    color: #6B7280;
+    text-align: center;
+}
+
+.hits-container .hits .hit {
+    font-size: 0.9em;
+    border-left: 4px solid #60A5FA;
+    background-color: #F3F4F6;
+    padding: 8px 12px;
+    margin: 4px 0;
+}
+
+.hits-container .hits .hit span {
+    display: block;
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.7em;
+    color: #6B7280;
+}
+</style>
+    <body>
+        <div class="container">
+    <div class="search-container">
+        <div class="label-container">
+            <label for="search-input">Find a billionaire</label>
+            <p>Powered by Algolia</p>
+        </div>
+        <input type="text" id="search-input" autofocus="true" name="search" placeholder="Search for a billionaire" />
+    </div>
+
+    <div class="hits-container">
+        <div id="hits" class="hits">
+            <p class="hits-placeholder">Start typing to see results</p>
+        </div>
+    </div>
+</div>
+        
+        <script type="module">
+    import algoliasearch from 'https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch.esm.browser.js';
+
+    const client = algoliasearch('U4F0ZH611V', '943454d4380544b64efe43428b956b2c');
+    const index = client.initIndex('billionaires');
+    let typingTimer; // this holds our JS timeout function
+    let doneTypingInterval = 400; // wait this long (in ms) after user is done typing to query Algolia
+    var input = document.querySelector('input'); // our input field
+    var htmlHits = document.getElementById('hits'); // our search results container as defined in the HTML
+    // event called when the user is typing
+input.onkeyup = function(e) {
+    clearTimeout(typingTimer); // clear the JS timeout
+    let input_val = this.value; // get the current value of the text input
+
+    // check if there is anything in the text input
+    if (input_val.length > 0) {
+        // if there is, query Algolia
+        typingTimer = setTimeout(() => query(input_val), doneTypingInterval);
+    } else {
+        // if there isn't, clear the search results
+        hits = [];
+        htmlHits.innerHTML = '<p class="hits-placeholder">Start typing to see results</p>';
+    }
+}
+async function query(val) {
+    htmlHits.innerHTML = ''; // reset the search results container
+
+    // QUERY ALGOLIA HERE
+    let { hits } = await index.search(val, { hitsPerPage: 10 });
+
+    // Loop through the search results and inject a <p> tag into our HTML containing the billionaire's info
+    for (var i = 0; i < hits.length; i++) {
+        let billionaire = hits[i]; // get the current billionaire record
+        htmlHits.innerHTML += `<p class="hit">${billionaire.Name} <span>Rank: ${billionaire.Rank}&nbsp;&nbsp;|&nbsp;&nbsp;Net Worth ${billionaire.NetWorth}</span></p>`;
+    }
+
+    htmlHits.style.display = "block";
+}
+</script>
+    </body>
+</html>
